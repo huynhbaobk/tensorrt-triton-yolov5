@@ -3,7 +3,7 @@
 This repository shows how to deploy YOLOv5 as an optimized [TensorRT](https://github.com/NVIDIA/tensorrt) engine to [Triton Inference Server](https://github.com/NVIDIA/triton-inference-server).
 
 This project based on [isarsoft
- yolov4-triton-tensorrt]https://github.com/isarsoft/yolov4-triton-tensorrt and [Wang Xinyu - TensorRTx](https://github.com/wang-xinyu/tensorrtx)
+ yolov4-triton-tensorrt](https://github.com/isarsoft/yolov4-triton-tensorrt) and [Wang Xinyu - TensorRTx](https://github.com/wang-xinyu/tensorrtx)
 
 ## Build TensorRT engine
 
