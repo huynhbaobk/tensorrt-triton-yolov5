@@ -1,4 +1,4 @@
-wget https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5m6.pt -P yolov5
+wget https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5m6.pt -P yolov5 -O yolov5m6.pt
 
 cp tensorrtx/yolov5/gen_wts.py yolov5
 

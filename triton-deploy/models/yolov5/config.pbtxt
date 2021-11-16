@@ -1,0 +1,28 @@
+name: "yolov5"
+platform: "tensorrt_plan"
+backend: "tensorrt"
+
+max_batch_size: 1
+input: [
+    {
+        name: "data"
+        data_type: TYPE_FP32
+        format: FORMAT_NONE
+        dims: [ 3, 640, 640 ]
+    }
+]
+output: [
+    {
+        name: "prob",
+        data_type: TYPE_FP32
+        dims: [ 6001, 1, 1 ]
+    }
+]
+instance_group: [
+    {
+        name: "yolov5"
+        kind: KIND_GPU
+        count: 4
+        gpus: [ 0 ]
+    }
+]
