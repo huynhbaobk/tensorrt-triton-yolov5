@@ -1,0 +1,4 @@
+
+./models/*
+./models/
+triton-deploy/models/*/*/*.plan
