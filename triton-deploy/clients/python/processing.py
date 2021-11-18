@@ -128,7 +128,7 @@ def non_max_suppression(prediction, origin_h, origin_w, input_w, input_h, conf_t
     """
     # Get the boxes that score > CONF_THRESH
     boxes = prediction[prediction[:, 4] >= conf_thres]
-    print(boxes)
+#     print(boxes)
     # Trandform bbox from [center_x, center_y, w, h] to [x1, y1, x2, y2]
     boxes[:, :4] = xywh2xyxy(boxes[:, :4], origin_h, origin_w, input_w, input_h )
     # clip the coordinates

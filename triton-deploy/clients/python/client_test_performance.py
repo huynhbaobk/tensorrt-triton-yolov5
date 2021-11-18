@@ -242,7 +242,7 @@ if __name__ == '__main__':
 #             shutil.rmtree('output/')
 #         os.makedirs('output/')
         
-        NUM_THREADS = 300
+        NUM_THREADS = 500
         try:
             image_dir = "data/"
             threads_list = []

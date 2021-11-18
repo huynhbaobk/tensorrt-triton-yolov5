@@ -1,7 +1,5 @@
 name: "yolov5"
 platform: "tensorrt_plan"
-backend: "tensorrt"
-
 max_batch_size: 1
 input: [
     {
@@ -22,7 +20,7 @@ instance_group: [
     {
         name: "yolov5"
         kind: KIND_GPU
-        count: 4
+        count: 40
         gpus: [ 0 ]
     }
 ]
