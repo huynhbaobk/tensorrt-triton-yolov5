@@ -76,8 +76,8 @@ RUN cd ./opencv_build/opencv && mkdir build && cd build && \
     make -j8 && \
     make install
 
-COPY convert.sh convert.sh
-RUN chmod +x convert.sh
+COPY convert.sh ./convert.sh
+RUN chmod +x ./convert.sh
 
 # RUN ["/bin/bash"]
-ENTRYPOINT ["/bin/bash", "convert.sh"]
+ENTRYPOINT ["/bin/bash", "./convert.sh"]
