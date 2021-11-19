@@ -62,9 +62,18 @@ To run the perf_client, install the Triton Python SDK (tritonclient), which ship
 
 ```bash
 # Example
-perf_client -m yolov5 -u 127.0.0.1:8001 -i grpc --shared-memory system --concurrency-range 32
+perf_client -m yolov5 -u 127.0.0.1:8221 -i grpc --shared-memory system --concurrency-range 32
 ```
 
-The following benchmarks were taken on a system with `NVIDIA 2070 Ti` GPU.
+Alternatively you can get the Triton Client SDK docker container.
+
+```bash
+docker run -it --ipc=host --net=host nvcr.io/nvidia/tritonserver:21.03-py3-sdk /bin/bash
+cd install/bin
+# Example
+./perf_client -m yolov5 -u 127.0.0.1:8221 -i grpc --shared-memory system --concurrency-range 4
+```
+
+The following benchmarks were taken on a system with `NVIDIA 2080 Ti` GPU.
 Concurrency is the number of concurrent clients invoking inference on the Triton server via grpc.
 Results are total frames per second (FPS) of all clients combined and average latency in milliseconds for every single respective client.
