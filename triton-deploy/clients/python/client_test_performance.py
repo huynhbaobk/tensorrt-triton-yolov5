@@ -45,13 +45,13 @@ class inferThread(threading.Thread):
         self.client_timeout = client_timeout
 
     def run(self):
-        print(f"Run inference thread {self.thread_num}")
-        for i in range(20):
+#        print(f"Run inference thread {self.thread_num}")
+        for i in range(40):
             results = self.triton_client.infer(model_name=self.model_name,
                                 inputs=self.inputs,
                                 outputs=self.outputs,
                                 client_timeout=self.client_timeout)
-        print("inference done")
+#        print("inference done")
         
 #         for i, img_path in enumerate(self.image_path_batch):
 #             parent, filename = os.path.split(img_path)
@@ -242,7 +242,7 @@ if __name__ == '__main__':
 #             shutil.rmtree('output/')
 #         os.makedirs('output/')
         
-        NUM_THREADS = 10
+        NUM_THREADS = 30
         try:
             image_dir = "data/"
             threads_list = []
@@ -263,6 +263,6 @@ if __name__ == '__main__':
             
             for thread1 in threads_list:
                 thread1.join()
-            print("FPS: ",NUM_THREADS*20/(time.time()-start_time),(time.time()-start_time),NUM_THREADS*20)
+            print("FPS: ",NUM_THREADS*40/(time.time()-start_time),(time.time()-start_time),NUM_THREADS*20)
         except:
             print("FAILED to infer model")
