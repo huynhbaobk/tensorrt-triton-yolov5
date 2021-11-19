@@ -20,7 +20,7 @@ instance_group: [
     {
         name: "yolov5"
         kind: KIND_GPU
-        count: 40
+        count: 2
         gpus: [ 0 ]
     }
 ]

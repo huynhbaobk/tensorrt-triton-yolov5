@@ -91,7 +91,7 @@ if __name__ == '__main__':
                         '--url',
                         type=str,
                         required=False,
-                        default='localhost:8001',
+                        default='localhost:8221',
                         help='Inference server URL, default localhost:8001')
     parser.add_argument('-o',
                         '--out',
@@ -242,7 +242,7 @@ if __name__ == '__main__':
 #             shutil.rmtree('output/')
 #         os.makedirs('output/')
         
-        NUM_THREADS = 500
+        NUM_THREADS = 10
         try:
             image_dir = "data/"
             threads_list = []

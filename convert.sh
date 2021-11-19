@@ -7,22 +7,22 @@ cp tensorrtx/yolov5/gen_wts.py yolov5
 
 cd /workspace/yolov5
 
-# pip install -r requirements.txt
+pip install -r requirements.txt
 
-python gen_wts.py -w yolov5m6.pt -o yolov5m6.wts
+python /workspace/yolov5/gen_wts.py -w /workspace/yolov5/yolov5m6.pt -o /workspace/yolov5/yolov5m6.wts
 
 cd /workspace/tensorrtx/yolov5
 
-rm -rf build
+rm -rf /workspace/tensorrtx/yolov5/build
 
-mkdir -p build
+mkdir -p /workspace/tensorrtx/yolov5/build
 
-cd build
+cd /workspace/tensorrtx/yolov5/build
 # update CLASS_NUM in yololayer.h if your model is trained on custom dataset
 cp /workspace/yolov5/yolov5m6.wts /workspace/tensorrtx/yolov5/build
 cmake ..
 make -j8
 
-./yolov5 -s yolov5m6.wts yolov5m6.engine m6
+/workspace/tensorrtx/yolov5/build/yolov5 -s /workspace/tensorrtx/yolov5/build/yolov5m6.wts /workspace/tensorrtx/yolov5/build/yolov5m6.engine m6
 
 exec "$@"

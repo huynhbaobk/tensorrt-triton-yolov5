@@ -42,7 +42,7 @@ if __name__ == '__main__':
                         '--url',
                         type=str,
                         required=False,
-                        default='localhost:8001',
+                        default='localhost:8221',
                         help='Inference server URL, default localhost:8001')
     parser.add_argument('-o',
                         '--out',
