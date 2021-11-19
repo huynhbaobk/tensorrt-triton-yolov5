@@ -7,7 +7,7 @@ cp tensorrtx/yolov5/gen_wts.py yolov5
 
 cd /workspace/yolov5
 
-pip install -r requirements.txt
+# pip install -r requirements.txt
 
 python /workspace/yolov5/gen_wts.py -w /workspace/yolov5/yolov5m6.pt -o /workspace/yolov5/yolov5m6.wts
 

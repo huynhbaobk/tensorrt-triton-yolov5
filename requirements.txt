@@ -14,3 +14,6 @@ requests>=2.23.0
 scipy>=1.4.1
 torchvision>=0.8.1
 tqdm>=4.41.0
+tensorboard>=2.4.1
+pandas>=1.1.4
+seaborn>=0.11.0
