@@ -2,6 +2,7 @@ from boundingbox import BoundingBox
 
 import cv2
 import numpy as np
+from labels import STATUS
 
 def preprocess(raw_bgr_image, input_shape):
     """
@@ -152,7 +153,7 @@ def non_max_suppression(prediction, origin_h, origin_w, input_w, input_h, conf_t
     boxes = np.stack(keep_boxes, 0) if len(keep_boxes) else np.array([])
     return boxes
 
-def postprocess(output, origin_w, origin_h, input_shape, conf_th=0.5, nms_threshold=0.5, letter_box=False):
+def postprocess_test(output, origin_w, origin_h, input_shape, conf_th=0.5, nms_threshold=0.5, letter_box=False):
     """Postprocess TensorRT outputs.
     # Args
         output: list of detections with schema 
@@ -180,3 +181,31 @@ def postprocess(output, origin_w, origin_h, input_shape, conf_th=0.5, nms_thresh
     for box, score, label in zip(result_boxes, result_scores, result_classid):
         detected_objects.append(BoundingBox(label, score, box[0], box[2], box[1], box[3], origin_h, origin_w))
     return detected_objects
+
+
+def postprocess(output, origin_w, origin_h, input_shape, conf_th=0.5, nms_threshold=0.5, letter_box=False):
+    """Postprocess TensorRT outputs.
+    # Args
+        output: list of detections with schema 
+        [num_boxes,cx,cy,w,h,conf,cls_id, cx,cy,w,h,conf,cls_id, ...] 
+        conf_th: confidence threshold
+        letter_box: boolean, referring to _preprocess_yolo()
+    # Returns
+        list of bounding boxes with all detections above threshold and after nms, see class BoundingBox
+    """
+    
+    # Get the num of boxes detected
+    # Here we use the first row of output in that batch_size = 1
+    output = output[0]
+    num = int(output[0])
+    # Reshape to a two dimentional ndarray
+    pred = np.reshape(output[1:], (-1, 6))[:num, :]
+
+    # Do nms
+    boxes = non_max_suppression(pred, origin_h, origin_w, input_shape[0], input_shape[1], conf_thres=conf_th, nms_thres=nms_threshold)
+    result_boxes = boxes[:, :4] if len(boxes) else np.array([])
+    result_scores = boxes[:, 4] if len(boxes) else np.array([])
+    result_classid = boxes[:, 5].astype(np.int) if len(boxes) else np.array([])
+        
+
+    return STATUS.SUCESSFUL, len(result_boxes), result_classid, result_scores, result_boxes

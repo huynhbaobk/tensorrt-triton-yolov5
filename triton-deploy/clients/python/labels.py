@@ -81,3 +81,13 @@ class COCOLabels(Enum):
     teddy_bear = 77
     hair_drier = 78
     toothbrush = 79
+
+
+class STATUS(Enum):
+    SUCESSFUL = None
+    UNAVAILABLE = 1 #server connection error
+    INVALID_ARGUMENT = 2 #Input name or shape input is wrong
+    FAILED_PRECONDITIO = 3 #Signature name is wrong
+    NOT_FOUND = 4 #Model name is wrong
+    DEADLINE_EXCEEDED = 5 #Time out
+    OUT_NAME = 6 #Output name is wrong

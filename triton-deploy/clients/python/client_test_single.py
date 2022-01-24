@@ -1,65 +1,16 @@
-#!/usr/bin/env python
-
 import argparse
 import numpy as np
 import sys
 import cv2
-import threading
-import os
-import shutil
+import pickle
+import json
 
 import tritonclient.grpc as grpcclient
 from tritonclient.utils import InferenceServerException
 
-from processing import preprocess, postprocess
+from processing import preprocess, postprocess, postprocess_test
 from render import render_box, render_filled_box, get_text_size, render_text, RAND_COLORS, plot_one_box
 from labels import COCOLabels
-
-
-def get_img_path_batches(batch_size, img_dir):
-    ret = []
-    batch = []
-    for root, dirs, files in os.walk(img_dir):
-        for name in files:
-            if len(batch) == batch_size:
-                ret.append(batch)
-                batch = []
-            batch.append(os.path.join(root, name))
-    if len(batch) > 0:
-        ret.append(batch)
-    return ret
-
-class inferThread(threading.Thread):
-    def __init__(self, thread_num,
-                         triton_client,
-                         model_name,
-                         inputs,
-                         outputs,
-                         client_timeout):
-        threading.Thread.__init__(self)
-        self.thread_num = thread_num
-        self.triton_client = triton_client
-        self.model_name = model_name
-        self.inputs = inputs
-        self.outputs = outputs
-        self.client_timeout = client_timeout
-
-    def run(self):
-#        print(f"Run inference thread {self.thread_num}")
-        for i in range(40):
-            results = self.triton_client.infer(model_name=self.model_name,
-                                inputs=self.inputs,
-                                outputs=self.outputs,
-                                client_timeout=self.client_timeout)
-#        print("inference done")
-        
-#         for i, img_path in enumerate(self.image_path_batch):
-#             parent, filename = os.path.split(img_path)
-#             save_name = os.path.join('output', filename)
-#             # Save image
-#             cv2.imwrite(save_name, batch_image_raw[i])
-#         print('input->{}, time->{:.2f}ms, saving into output/'.format(self.image_path_batch, use_time * 1000))
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -214,6 +165,32 @@ if __name__ == '__main__':
             print("Got: {}".format(ex.message()))
             sys.exit(1)
 
+    # DUMMY MODE
+    if FLAGS.mode == 'dummy':
+        print("Running in 'dummy' mode")
+        print("Creating emtpy buffer filled with ones...")
+        inputs = []
+        outputs = []
+        inputs.append(grpcclient.InferInput('data', [1, 3, FLAGS.width, FLAGS.height], "FP32"))
+        inputs[0].set_data_from_numpy(np.ones(shape=(1, 3, FLAGS.width, FLAGS.height), dtype=np.float32))
+        outputs.append(grpcclient.InferRequestedOutput('prob'))
+
+        print("Invoking inference...")
+        results = triton_client.infer(model_name=FLAGS.model,
+                                    inputs=inputs,
+                                    outputs=outputs,
+                                    client_timeout=FLAGS.client_timeout)
+        if FLAGS.model_info:
+            statistics = triton_client.get_inference_statistics(model_name=FLAGS.model)
+            if len(statistics.model_stats) != 1:
+                print("FAILED: get_inference_statistics")
+                sys.exit(1)
+            print(statistics)
+        print("Done")
+
+        result = results.as_numpy('prob')
+        print(f"Received result buffer of size {result.shape}")
+        print(f"Naive buffer sum: {np.sum(result)}")
 
     # IMAGE MODE
     if FLAGS.mode == 'image':
@@ -237,32 +214,111 @@ if __name__ == '__main__':
         inputs[0].set_data_from_numpy(input_image_buffer)
 
         print("Invoking inference...")
+        results = triton_client.infer(model_name=FLAGS.model,
+                                    inputs=inputs,
+                                    outputs=outputs,
+                                    client_timeout=FLAGS.client_timeout)
 
-#         if os.path.exists('output/'):
-#             shutil.rmtree('output/')
-#         os.makedirs('output/')
+        if FLAGS.model_info:
+            statistics = triton_client.get_inference_statistics(model_name=FLAGS.model)
+            if len(statistics.model_stats) != 1:
+                print("FAILED: get_inference_statistics")
+                sys.exit(1)
+            print(statistics)
+        print("Done")
+
+        result = results.as_numpy('prob')
+        print(f"Received result buffer of size {result.shape}")
+        print(f"Naive buffer sum: {np.sum(result)}")
         
-        NUM_THREADS = 30
-        try:
-            image_dir = "data/"
-            threads_list = []
-            
-            for thread_num in range(NUM_THREADS):
-                # create a new thread to do inference
-                thread1 = inferThread(thread_num, 
-                                      triton_client,
-                                      model_name=FLAGS.model,
-                                      inputs=inputs,
-                                      outputs=outputs,
-                                      client_timeout=FLAGS.client_timeout)
-                threads_list.append(thread1)
-            import time
-            start_time = time.time()
-            for thread1 in threads_list:
-                thread1.start()
-            
-            for thread1 in threads_list:
-                thread1.join()
-            print("FPS: ",NUM_THREADS*40/(time.time()-start_time),(time.time()-start_time),NUM_THREADS*20)
-        except:
-            print("FAILED to infer model")
+
+#         with open('out', 'w') as f:
+#             json.dump(results, f, allow_nan = True)
+
+        detected_objects = postprocess_test(result, input_image.shape[1], input_image.shape[0], [FLAGS.width, FLAGS.height], FLAGS.confidence, FLAGS.nms)
+        print(f"Detected objects: {len(detected_objects)}")
+
+        for box in detected_objects:
+            print(f"{COCOLabels(box.classID).name}: {box.confidence}")
+            plot_one_box(box.box(), input_image,color=tuple(RAND_COLORS[box.classID % 64].tolist()), label=f"{COCOLabels(box.classID).name}:{box.confidence:.2f}",)   
+
+        if FLAGS.out:
+            cv2.imwrite(FLAGS.out, input_image)
+            print(f"Saved result to {FLAGS.out}")
+        else:
+            cv2.imshow('image', input_image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+    # VIDEO MODE
+    if FLAGS.mode == 'video':
+        print("Running in 'video' mode")
+        if not FLAGS.input:
+            print("FAILED: no input video")
+            sys.exit(1)
+
+        inputs = []
+        outputs = []
+        inputs.append(grpcclient.InferInput('data', [1, 3, FLAGS.width, FLAGS.height], "FP32"))
+        outputs.append(grpcclient.InferRequestedOutput('prob'))
+
+        print("Opening input video stream...")
+        cap = cv2.VideoCapture(FLAGS.input)
+        if not cap.isOpened():
+            print(f"FAILED: cannot open video {FLAGS.input}")
+            sys.exit(1)
+
+        counter = 0
+        out = None
+        print("Invoking inference...")
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                print("failed to fetch next frame")
+                break
+
+            if counter == 0 and FLAGS.out:
+                print("Opening output video stream...")
+                fourcc = cv2.VideoWriter_fourcc('M', 'P', '4', 'V')
+                out = cv2.VideoWriter(FLAGS.out, fourcc, FLAGS.fps, (frame.shape[1], frame.shape[0]))
+
+            input_image_buffer = preprocess(frame, [FLAGS.width, FLAGS.height])
+            input_image_buffer = np.expand_dims(input_image_buffer, axis=0)
+            inputs[0].set_data_from_numpy(input_image_buffer)
+
+            results = triton_client.infer(model_name=FLAGS.model,
+                                    inputs=inputs,
+                                    outputs=outputs,
+                                    client_timeout=FLAGS.client_timeout)
+
+            result = results.as_numpy('prob')
+
+            detected_objects = postprocess_test(result, frame.shape[1], frame.shape[0], [FLAGS.width, FLAGS.height], FLAGS.confidence, FLAGS.nms)
+            print(f"Frame {counter}: {len(detected_objects)} objects")
+            counter += 1
+
+            for box in detected_objects:
+                print(f"{COCOLabels(box.classID).name}:{box.confidence}")
+                plot_one_box(box.box(), input_image,color=tuple(RAND_COLORS[box.classID % 64].tolist()), label=f"{COCOLabels(box.classID).name}: {box.confidence:.2f}",)   
+
+            if FLAGS.out:
+                out.write(frame)
+            else:
+                cv2.imshow('image', frame)
+                if cv2.waitKey(1) == ord('q'):
+                    break
+
+        if FLAGS.model_info:
+            statistics = triton_client.get_inference_statistics(model_name=FLAGS.model)
+            if len(statistics.model_stats) != 1:
+                print("FAILED: get_inference_statistics")
+                sys.exit(1)
+            print(statistics)
+        print("Done")
+
+        cap.release()
+        if FLAGS.out:
+            out.release()
+        else:
+            cv2.destroyAllWindows()
+        print("Done")

@@ -1,8 +1,8 @@
 # 
-# Docker will download the TensorRT container. You need to select the version (in this case 20.08) according to the version of Triton that you want to use later to ensure the TensorRT versions match. Matching NGC version tags use the same TensorRT version.
+# Docker will download the TensorRT container. You need to select the version (in this case 21.10) according to the version of Triton that you want to use later to ensure the TensorRT versions match. Matching NGC version tags use the same TensorRT version.
 ###
 
-FROM nvcr.io/nvidia/tensorrt:20.08-py3
+FROM nvcr.io/nvidia/tensorrt:21.10-py3
 
 ARG DEBIAN_FRONTEND=noninteractive
 

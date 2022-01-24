@@ -11,16 +11,16 @@ Run the following to get a running TensorRT container with our repo code:
 
 ```bash
 cd tensorrt-triton-yolov5
-bash launch_tensorrt.sh
+bash convert_tensorrt.sh
 ```
 
 ### Or build docker from Dockerfile
 ```bash
 cd tensorrt-triton-yolov5
-sudo docker build -t baohuynhbk/tensorrt-20.08-py3-opencv4:latest -f tensorrt.Dockerfile .
+sudo docker build -t baohuynhbk/tensorrt-21.10-py3-opencv4:latest -f tensorrt.Dockerfile .
 ```
 
-Docker will download the TensorRT container. You need to select the version (in this case 20.08) according to the version of Triton that you want to use later to ensure the TensorRT versions match. Matching NGC version tags use the same TensorRT version.
+Docker will download the TensorRT container. You need to select the version (in this case 21.10) according to the version of Triton that you want to use later to ensure the TensorRT versions match. Matching NGC version tags use the same TensorRT version.
 
 Inside the container the following will run:
 ```bash
@@ -35,7 +35,7 @@ This will generate a file called `yolov5.engine`, which is our serialized Tensor
 Open an terminal
 
 ```bash
-bash run_triton.sh
+bash start_triton.sh
 ```
 
 ### Client
@@ -45,7 +45,8 @@ sudo apt update
 sudo apt install libb64-dev
 
 pip install nvidia-pyindex
-pip install tritonclient[all]
+pip install tritonclient[all]==2.13.0
+chmod u+x /home/administrator/.virtualenvs/env/bin/perf_client
 ```
 Open another terminal.
 This repo contains a python client.
@@ -62,7 +63,7 @@ To run the perf_client, install the Triton Python SDK (tritonclient), which ship
 
 ```bash
 # Example
-perf_client -m yolov5 -u 127.0.0.1:8221 -i grpc --shared-memory system --concurrency-range 32
+perf_client -m yolov5 -u 127.0.0.1:8321 -i grpc --shared-memory system --concurrency-range 32
 ```
 
 Alternatively you can get the Triton Client SDK docker container.
@@ -71,9 +72,9 @@ Alternatively you can get the Triton Client SDK docker container.
 docker run -it --ipc=host --net=host nvcr.io/nvidia/tritonserver:21.03-py3-sdk /bin/bash
 cd install/bin
 # Example
-./perf_client -m yolov5 -u 127.0.0.1:8221 -i grpc --shared-memory system --concurrency-range 4
+./perf_client -m yolov5 -u 127.0.0.1:8321 -i grpc --shared-memory system --concurrency-range 4
 ```
 
-The following benchmarks were taken on a system with `NVIDIA 2080 Ti` GPU.
+The following benchmarks were taken on a system with `8x NVIDIA RTX A4000` GPU.
 Concurrency is the number of concurrent clients invoking inference on the Triton server via grpc.
 Results are total frames per second (FPS) of all clients combined and average latency in milliseconds for every single respective client.

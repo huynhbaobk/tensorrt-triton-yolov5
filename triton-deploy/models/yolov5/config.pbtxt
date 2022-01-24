@@ -1,6 +1,6 @@
 name: "yolov5"
 platform: "tensorrt_plan"
-max_batch_size: 1
+max_batch_size: 4
 input: [
     {
         name: "data"
@@ -16,11 +16,16 @@ output: [
         dims: [ 6001, 1, 1 ]
     }
 ]
+
+dynamic_batching {
+	preferred_batch_size: [ 2, 4 ]
+}
+
 instance_group: [
     {
         name: "yolov5"
         kind: KIND_GPU
-        count: 2
-        gpus: [ 0 ]
+        count: 1
+        gpus: [0,1,2,3,4,5,6,7]
     }
 ]
